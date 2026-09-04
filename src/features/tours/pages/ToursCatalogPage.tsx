@@ -4,12 +4,15 @@ import { TourTable } from '../components/TourTable'
 import { useTours } from '../hooks/useTours'
 import type { Tour } from '../types'
 
-export function ToursCatalogPage() {
+interface ToursCatalogPageProps {
+  onEditTour: (tourId: number) => void
+}
+
+export function ToursCatalogPage({ onEditTour }: ToursCatalogPageProps) {
   const { tours, isLoading, error, refetch } = useTours()
 
   const handleEdit = (tour: Tour) => {
-    // TODO: navigate to the tour edit route once it's implemented
-    console.log('Editar tour', tour.id)
+    onEditTour(tour.id)
   }
 
   return (

@@ -12,7 +12,7 @@ export function TourTableRow({ tour, onEdit }: TourTableRowProps) {
     <tr className="hover:bg-gray-50">
       <td className="px-4 py-3 text-sm font-medium text-gray-900">{tour.name}</td>
       <td className="px-4 py-3 text-sm text-gray-500">{tour.slug}</td>
-      <td className="px-4 py-3 text-sm text-gray-500">{tour.subtitle}</td>
+      <td className="px-4 py-3 text-sm text-gray-500">{tour.subtitle ?? '—'}</td>
       <td className="px-4 py-3 text-sm text-gray-500">
         {formatDateTime(tour.startTime)}
       </td>
