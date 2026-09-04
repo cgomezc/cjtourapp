@@ -1,5 +1,7 @@
-﻿function App() {
-  return <h1>cjtourapp</h1>
+﻿import { ToursCatalogPage } from './features/tours/pages/ToursCatalogPage'
+
+function App() {
+  return <ToursCatalogPage />
 }
 
 export default App
