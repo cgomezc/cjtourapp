@@ -1,18 +1,16 @@
+import { useNavigate } from 'react-router-dom'
 import { Button } from '../../../components/ui/Button'
 import { Spinner } from '../../../components/ui/Spinner'
 import { TourTable } from '../components/TourTable'
 import { useTours } from '../hooks/useTours'
 import type { Tour } from '../types'
 
-interface ToursCatalogPageProps {
-  onEditTour: (tourId: number) => void
-}
-
-export function ToursCatalogPage({ onEditTour }: ToursCatalogPageProps) {
+export function ToursCatalogPage() {
   const { tours, isLoading, error, refetch } = useTours()
+  const navigate = useNavigate()
 
   const handleEdit = (tour: Tour) => {
-    onEditTour(tour.id)
+    navigate(`/tours/${tour.id}`)
   }
 
   return (

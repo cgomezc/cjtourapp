@@ -1,12 +1,8 @@
+import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../../../components/ui/Button'
 import { Spinner } from '../../../components/ui/Spinner'
 import { formatDateTime } from '../../../lib/formatDate'
 import { useTourDetail } from '../hooks/useTourDetail'
-
-interface TourDetailPageProps {
-  tourId: number
-  onBack: () => void
-}
 
 const weekDayNames: Record<number, string> = {
   0: 'Domingo',
@@ -64,8 +60,26 @@ function DetailField({ label, value }: DetailFieldProps) {
   )
 }
 
-export function TourDetailPage({ tourId, onBack }: TourDetailPageProps) {
+export function TourDetailPage() {
+  const { tourId: tourIdParam } = useParams<{ tourId: string }>()
+  const navigate = useNavigate()
+  const tourId = Number(tourIdParam)
+  const onBack = () => navigate('/tours')
+
   const { tour, isLoading, error, refetch } = useTourDetail(tourId)
+
+  if (!tourIdParam || Number.isNaN(tourId)) {
+    return (
+      <main className="mx-auto max-w-6xl px-4 py-8">
+        <div className="space-y-4">
+          <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">Tour no válido.</div>
+          <Button variant="secondary" onClick={onBack}>
+            Regresar al catálogo
+          </Button>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
