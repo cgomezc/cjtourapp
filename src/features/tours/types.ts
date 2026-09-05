@@ -1,4 +1,17 @@
 /**
+ * Localized copy for a tour (title, subtitle, description, itinerary) in a given language.
+ */
+export interface TourTranslation {
+  id: number
+  tourId: number
+  languageCode: string
+  title: string
+  subtitle: string | null
+  description: string
+  detailedItinerary: string | null
+}
+
+/**
  * Tour model as returned by the API.
  */
 export interface Tour {
@@ -26,4 +39,43 @@ export interface Tour {
   routeMapUrl?: string | null
   featuredImageUrl?: string | null
   galleryImageUrls?: string[]
+  translations?: TourTranslation[]
+}
+
+/**
+ * Translation payload sent to the API when updating a tour.
+ * `id` is omitted for translations that don't exist yet.
+ */
+export interface TourTranslationInput {
+  id?: number
+  languageCode: string
+  title: string
+  subtitle: string
+  description: string
+  detailedItinerary: string
+}
+
+/**
+ * Request body for PUT /api/tours/{id}.
+ */
+export interface UpdateTourPayload {
+  slug: string
+  subtitle: string
+  description: string
+  durationHours: number
+  durationDays: number
+  startTime: string
+  endTime: string
+  availableDays: number[]
+  minParticipants: number
+  maxParticipants: number
+  currentAvailability: number
+  minAge: number
+  isActive: boolean
+  isFeatured: boolean
+  tourCode: string
+  routeMapUrl: string
+  featuredImageUrl: string
+  galleryImageUrls: string[]
+  translations: TourTranslationInput[]
 }

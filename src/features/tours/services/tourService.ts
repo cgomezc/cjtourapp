@@ -1,6 +1,6 @@
-import { httpGet } from '../../../lib/httpClient'
+import { httpGet, httpPut } from '../../../lib/httpClient'
 import { mockTours } from '../mocks/tours.mock'
-import type { Tour } from '../types'
+import type { Tour, UpdateTourPayload } from '../types'
 
 const TOURS_ENDPOINT = '/api/tours'
 const DEFAULT_LANGUAGE = 'en-US'
@@ -50,4 +50,44 @@ export function getTourById(
 
   const params = new URLSearchParams({ language })
   return httpGet<Tour>(`${TOURS_ENDPOINT}/${tourId}?${params.toString()}`)
+}
+
+function getMockUpdateTour(tourId: number, payload: UpdateTourPayload): Promise<Tour> {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const index = mockTours.findIndex((item) => item.id === tourId)
+
+      if (index === -1) {
+        reject(new Error(`No se encontró el tour con id ${tourId}`))
+        return
+      }
+
+      const existing = mockTours[index]
+      const updated: Tour = {
+        ...existing,
+        ...payload,
+        updatedAt: new Date().toISOString(),
+        translations: payload.translations.map((translation, translationIndex) => ({
+          id: translation.id ?? existing.translations?.[translationIndex]?.id ?? 0,
+          tourId,
+          languageCode: translation.languageCode,
+          title: translation.title,
+          subtitle: translation.subtitle,
+          description: translation.description,
+          detailedItinerary: translation.detailedItinerary,
+        })),
+      }
+
+      mockTours[index] = updated
+      resolve(updated)
+    }, MOCK_DELAY_MS)
+  })
+}
+
+export function updateTour(tourId: number, payload: UpdateTourPayload): Promise<Tour> {
+  if (USE_MOCK_DATA) {
+    return getMockUpdateTour(tourId, payload)
+  }
+
+  return httpPut<Tour>(`${TOURS_ENDPOINT}/${tourId}`, payload)
 }
