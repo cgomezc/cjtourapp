@@ -20,9 +20,14 @@ export function ToursCatalogPage() {
           <h1 className="text-2xl font-semibold text-gray-900">Catálogo de tours</h1>
           <p className="text-sm text-gray-500">Gestiona los tours disponibles</p>
         </div>
-        <Button onClick={refetch} disabled={isLoading}>
-          Actualizar
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={refetch} disabled={isLoading}>
+            Actualizar
+          </Button>
+          <Button onClick={() => navigate('/tours/new')}>
+            Crear tour
+          </Button>
+        </div>
       </div>
 
       {isLoading && (

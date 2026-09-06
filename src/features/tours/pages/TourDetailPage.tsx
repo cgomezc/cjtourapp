@@ -1,13 +1,12 @@
-import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../../../components/ui/Button'
 import { Spinner } from '../../../components/ui/Spinner'
 import { Tabs } from '../../../components/ui/Tabs'
 import { formatDateTime } from '../../../lib/formatDate'
-import { TourEditForm } from '../components/TourEditForm'
 import { languageTabDefinitions, weekDayNames } from '../constants'
+import { useDestinations } from '../hooks/useDestinations'
 import { useTourDetail } from '../hooks/useTourDetail'
-import type { Tour, TourTranslation, UpdateTourPayload } from '../types'
+import type { Tour, TourTranslation } from '../types'
 
 function formatText(value: string | null | undefined): string {
   if (!value) {
@@ -64,9 +63,11 @@ export function TourDetailPage() {
   const tourId = Number(tourIdParam)
   const onBack = () => navigate('/tours')
 
-  const { tour, isLoading, error, refetch, saveTour, isSaving, saveError } = useTourDetail(tourId)
-  const [isEditing, setIsEditing] = useState(false)
-  const [saveSuccess, setSaveSuccess] = useState(false)
+  const { tour, isLoading, error, refetch } = useTourDetail(tourId)
+  const {
+    destinations,
+    isLoading: isLoadingDestinations,
+  } = useDestinations()
 
   if (!tourIdParam || Number.isNaN(tourId)) {
     return (
@@ -81,18 +82,6 @@ export function TourDetailPage() {
     )
   }
 
-  const handleSubmit = (payload: UpdateTourPayload) => {
-    setSaveSuccess(false)
-    saveTour(payload)
-      .then(() => {
-        setIsEditing(false)
-        setSaveSuccess(true)
-      })
-      .catch(() => {
-        // saveError is already surfaced by useTourDetail; nothing else to do here.
-      })
-  }
-
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between gap-4">
@@ -104,31 +93,18 @@ export function TourDetailPage() {
           <Button variant="secondary" onClick={onBack}>
             Volver
           </Button>
-          {!isEditing && (
+          {!isLoading && !error && tour && (
             <>
               <Button onClick={refetch} disabled={isLoading}>
                 Actualizar
               </Button>
-              {tour && (
-                <Button
-                  onClick={() => {
-                    setSaveSuccess(false)
-                    setIsEditing(true)
-                  }}
-                >
-                  Editar
-                </Button>
-              )}
+              <Button onClick={() => navigate(`/tours/${tour.id}/edit`)}>
+                Editar
+              </Button>
             </>
           )}
         </div>
       </div>
-
-      {saveSuccess && (
-        <div className="mb-4 rounded-md bg-green-50 p-4 text-sm text-green-700">
-          Tour actualizado correctamente.
-        </div>
-      )}
 
       {isLoading && (
         <div className="flex justify-center py-16">
@@ -145,24 +121,7 @@ export function TourDetailPage() {
         </div>
       )}
 
-      {!isLoading && !error && tour && isEditing && (
-        <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">{tour.name}</h2>
-            <p className="text-sm text-gray-500">ID: {tour.id}</p>
-          </div>
-
-          <TourEditForm
-            tour={tour}
-            isSaving={isSaving}
-            saveError={saveError}
-            onCancel={() => setIsEditing(false)}
-            onSubmit={handleSubmit}
-          />
-        </section>
-      )}
-
-      {!isLoading && !error && tour && !isEditing && (
+      {!isLoading && !error && tour && (
         <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900">{tour.name}</h2>
@@ -177,6 +136,13 @@ export function TourDetailPage() {
                 content: (
                   <div className="grid gap-3 md:grid-cols-2">
                     <DetailField label="Slug" value={tour.slug} />
+                    <DetailField
+                      label="Destino"
+                      value={
+                        tour.destination?.name ??
+                        (!isLoadingDestinations ? destinations.find((destination) => destination.id === tour.destinationId)?.name ?? formatNumber(tour.destinationId) : 'Cargando…')
+                      }
+                    />
                     <DetailField label="Código" value={formatText(tour.tourCode)} />
                     <DetailField label="Inicio" value={formatDateTime(tour.startTime)} />
                     <DetailField label="Fin" value={formatDateTime(tour.endTime)} />

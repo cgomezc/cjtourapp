@@ -1,4 +1,4 @@
-import { httpGet, httpPut } from '../../../lib/httpClient'
+import { httpGet, httpPost, httpPut } from '../../../lib/httpClient'
 import { mockTours } from '../mocks/tours.mock'
 import type { Tour, UpdateTourPayload } from '../types'
 
@@ -52,6 +52,32 @@ export function getTourById(
   return httpGet<Tour>(`${TOURS_ENDPOINT}/${tourId}?${params.toString()}`)
 }
 
+function getMockCreateTour(payload: UpdateTourPayload): Promise<Tour> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const newTour: Tour = {
+        id: Math.max(...mockTours.map((t) => t.id), 0) + 1,
+        name: payload.slug,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        ...payload,
+        translations: payload.translations.map((translation) => ({
+          id: 0,
+          tourId: 0,
+          languageCode: translation.languageCode,
+          title: translation.title,
+          subtitle: translation.subtitle,
+          description: translation.description,
+          detailedItinerary: translation.detailedItinerary,
+        })),
+      }
+
+      mockTours.push(newTour)
+      resolve(newTour)
+    }, MOCK_DELAY_MS)
+  })
+}
+
 function getMockUpdateTour(tourId: number, payload: UpdateTourPayload): Promise<Tour> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -82,6 +108,14 @@ function getMockUpdateTour(tourId: number, payload: UpdateTourPayload): Promise<
       resolve(updated)
     }, MOCK_DELAY_MS)
   })
+}
+
+export function createTour(payload: UpdateTourPayload): Promise<Tour> {
+  if (USE_MOCK_DATA) {
+    return getMockCreateTour(payload)
+  }
+
+  return httpPost<Tour>(TOURS_ENDPOINT, payload)
 }
 
 export function updateTour(tourId: number, payload: UpdateTourPayload): Promise<Tour> {

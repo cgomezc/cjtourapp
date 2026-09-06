@@ -17,6 +17,8 @@ export interface TourTranslation {
 export interface Tour {
   id: number
   name: string
+  destinationId?: number | null
+  destination?: Destination | null
   createdAt: string
   updatedAt: string
   slug: string
@@ -43,6 +45,21 @@ export interface Tour {
 }
 
 /**
+ * Destination returned by GET /api/destinations.
+ */
+export interface Destination {
+  id: number
+  name: string
+  slug: string
+  description: string
+  country: string
+  city: string
+  featuredImageUrl: string | null
+  featured: boolean
+  isActive: boolean
+}
+
+/**
  * Translation payload sent to the API when updating a tour.
  * `id` is omitted for translations that don't exist yet.
  */
@@ -60,6 +77,7 @@ export interface TourTranslationInput {
  */
 export interface UpdateTourPayload {
   slug: string
+  destinationId?: number
   subtitle: string
   description: string
   durationHours: number
