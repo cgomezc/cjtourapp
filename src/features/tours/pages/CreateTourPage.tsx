@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../../../components/ui/Button'
-import { TourForm } from '../components/TourEditForm'
+import { TourForm } from '../components/TourForm'
 import { useDestinations } from '../hooks/useDestinations'
 import { createTour } from '../services/tourService'
-import { formValuesToUpdatePayload } from '../services/tourFormPayloads'
+import { toCreatePayload } from '../services/tourFormPayloads'
 import type { TourFormValues } from '../services/tourFormPayloads'
 
 function getDefaultFormValues(): TourFormValues {
@@ -40,8 +40,8 @@ function getDefaultFormValues(): TourFormValues {
         description: '',
         detailedItinerary: '',
       },
-      'es-ES': {
-        languageCode: 'es-ES',
+      'es-MX': {
+        languageCode: 'es-MX',
         title: '',
         subtitle: '',
         description: '',
@@ -67,7 +67,7 @@ export function CreateTourPage() {
     setSubmitError(null)
     setSuccessMessage(null)
 
-    const payload = formValuesToUpdatePayload(formValues)
+    const payload = toCreatePayload(formValues)
 
     createTour(payload)
       .then((tour) => {

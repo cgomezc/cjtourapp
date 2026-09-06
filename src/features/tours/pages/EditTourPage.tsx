@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../../../components/ui/Button'
 import { Spinner } from '../../../components/ui/Spinner'
-import { TourForm } from '../components/TourEditForm'
+import { TourForm } from '../components/TourForm'
 import { useDestinations } from '../hooks/useDestinations'
 import { useTourDetail } from '../hooks/useTourDetail'
-import { formValuesToUpdatePayload, tourToFormValues } from '../services/tourFormPayloads'
+import { toUpdatePayload, tourToFormValues } from '../services/tourFormPayloads'
+import type { TourFormValues } from '../services/tourFormPayloads'
 
 export function EditTourPage() {
   const { tourId: tourIdParam } = useParams<{ tourId: string }>()
@@ -21,6 +22,10 @@ export function EditTourPage() {
   } = useDestinations()
   const [saveSuccess, setSaveSuccess] = useState(false)
 
+  // Recomputed only when the loaded tour changes, so the form isn't reset
+  // on every unrelated re-render (e.g. while `isSaving` toggles).
+  const defaultValues = useMemo(() => (tour ? tourToFormValues(tour) : null), [tour])
+
   if (!tourIdParam || Number.isNaN(tourId)) {
     return (
       <main className="mx-auto max-w-6xl px-4 py-8">
@@ -34,9 +39,13 @@ export function EditTourPage() {
     )
   }
 
-  const handleSubmit = (formValues: ReturnType<typeof tourToFormValues>) => {
+  const handleSubmit = (formValues: TourFormValues) => {
+    if (!tour) {
+      return
+    }
+
     setSaveSuccess(false)
-    const payload = formValuesToUpdatePayload(formValues)
+    const payload = toUpdatePayload(formValues, tour)
     saveTour(payload)
       .then(() => {
         setSaveSuccess(true)
@@ -80,7 +89,7 @@ export function EditTourPage() {
         </div>
       )}
 
-      {!isLoading && !error && tour && (
+      {!isLoading && !error && tour && defaultValues && (
         <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900">{tour.name}</h2>
@@ -89,7 +98,7 @@ export function EditTourPage() {
 
           <TourForm
             mode="edit"
-            defaultValues={tourToFormValues(tour)}
+            defaultValues={defaultValues}
             destinations={destinations}
             isLoadingDestinations={isLoadingDestinations}
             destinationsError={destinationsError}

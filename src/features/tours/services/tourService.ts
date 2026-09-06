@@ -78,7 +78,7 @@ function getMockCreateTour(payload: UpdateTourPayload): Promise<Tour> {
   })
 }
 
-function getMockUpdateTour(tourId: number, payload: UpdateTourPayload): Promise<Tour> {
+function getMockUpdateTour(tourId: number, payload: Partial<UpdateTourPayload>): Promise<Tour> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       const index = mockTours.findIndex((item) => item.id === tourId)
@@ -93,15 +93,25 @@ function getMockUpdateTour(tourId: number, payload: UpdateTourPayload): Promise<
         ...existing,
         ...payload,
         updatedAt: new Date().toISOString(),
-        translations: payload.translations.map((translation, translationIndex) => ({
-          id: translation.id ?? existing.translations?.[translationIndex]?.id ?? 0,
-          tourId,
-          languageCode: translation.languageCode,
-          title: translation.title,
-          subtitle: translation.subtitle,
-          description: translation.description,
-          detailedItinerary: translation.detailedItinerary,
-        })),
+        // `translations` may be omitted entirely when none of them changed.
+        translations: payload.translations
+          ? payload.translations.map((translation, translationIndex) => {
+              const existingTranslation =
+                existing.translations?.find(
+                  (item) => item.languageCode === translation.languageCode,
+                ) ?? existing.translations?.[translationIndex]
+
+              return {
+                id: translation.id ?? existingTranslation?.id ?? 0,
+                tourId,
+                languageCode: translation.languageCode,
+                title: translation.title,
+                subtitle: translation.subtitle,
+                description: translation.description,
+                detailedItinerary: translation.detailedItinerary,
+              }
+            })
+          : existing.translations,
       }
 
       mockTours[index] = updated
@@ -118,7 +128,7 @@ export function createTour(payload: UpdateTourPayload): Promise<Tour> {
   return httpPost<Tour>(TOURS_ENDPOINT, payload)
 }
 
-export function updateTour(tourId: number, payload: UpdateTourPayload): Promise<Tour> {
+export function updateTour(tourId: number, payload: Partial<UpdateTourPayload>): Promise<Tour> {
   if (USE_MOCK_DATA) {
     return getMockUpdateTour(tourId, payload)
   }

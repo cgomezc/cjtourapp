@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import type { FormEvent } from 'react'
+import { Controller, useForm } from 'react-hook-form'
 import { Button } from '../../../components/ui/Button'
 import { Tabs } from '../../../components/ui/Tabs'
 import { languageTabDefinitions, weekDayNames } from '../constants'
@@ -46,45 +45,14 @@ export function TourForm({
   onCancel,
   onSubmit,
 }: TourFormProps) {
-  const [values, setValues] = useState<TourFormValues>(defaultValues)
-
-  const updateGeneral = <K extends keyof Omit<TourFormValues, 'translations'>>(
-    key: K,
-    value: TourFormValues[K],
-  ) => {
-    setValues((prev) => ({ ...prev, [key]: value }))
-  }
-
-  const updateTranslation = (
-    code: string,
-    key: 'title' | 'subtitle' | 'description' | 'detailedItinerary',
-    value: string,
-  ) => {
-    setValues((prev) => ({
-      ...prev,
-      translations: {
-        ...prev.translations,
-        [code]: { ...prev.translations[code], [key]: value },
-      },
-    }))
-  }
-
-  const toggleAvailableDay = (day: number) => {
-    setValues((prev) => ({
-      ...prev,
-      availableDays: prev.availableDays.includes(day)
-        ? prev.availableDays.filter((item) => item !== day)
-        : [...prev.availableDays, day].sort((a, b) => a - b),
-    }))
-  }
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    onSubmit(values)
-  }
+  const { register, control, handleSubmit } = useForm<TourFormValues>({
+    // `values` (rather than only `defaultValues`) keeps the form in sync when
+    // the tour arrives asynchronously (e.g. EditTourPage loading a tour by id).
+    values: defaultValues,
+  })
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {submitError && <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">{submitError}</div>}
 
       <Tabs
@@ -97,25 +65,19 @@ export function TourForm({
                 <FieldWrapper label="Slug">
                   <input
                     className={inputClassName}
-                    value={values.slug}
-                    onChange={(e) => updateGeneral('slug', e.target.value)}
                     disabled={mode === 'edit'}
                     required
+                    {...register('slug')}
                   />
                 </FieldWrapper>
                 <FieldWrapper label="Código">
-                  <input
-                    className={inputClassName}
-                    value={values.tourCode}
-                    onChange={(e) => updateGeneral('tourCode', e.target.value)}
-                  />
+                  <input className={inputClassName} {...register('tourCode')} />
                 </FieldWrapper>
                 <FieldWrapper label="Destino">
                   <select
                     className={inputClassName}
-                    value={values.destinationId}
-                    onChange={(e) => updateGeneral('destinationId', e.target.value)}
                     disabled={isLoadingDestinations}
+                    {...register('destinationId')}
                   >
                     <option value="">
                       {isLoadingDestinations ? 'Cargando destinos…' : 'Selecciona un destino'}
@@ -134,18 +96,16 @@ export function TourForm({
                   <input
                     type="datetime-local"
                     className={inputClassName}
-                    value={values.startTime}
-                    onChange={(e) => updateGeneral('startTime', e.target.value)}
                     required
+                    {...register('startTime')}
                   />
                 </FieldWrapper>
                 <FieldWrapper label="Fin">
                   <input
                     type="datetime-local"
                     className={inputClassName}
-                    value={values.endTime}
-                    onChange={(e) => updateGeneral('endTime', e.target.value)}
                     required
+                    {...register('endTime')}
                   />
                 </FieldWrapper>
                 <FieldWrapper label="Duración (horas)">
@@ -153,8 +113,7 @@ export function TourForm({
                     type="number"
                     min={0}
                     className={inputClassName}
-                    value={values.durationHours}
-                    onChange={(e) => updateGeneral('durationHours', e.target.value)}
+                    {...register('durationHours')}
                   />
                 </FieldWrapper>
                 <FieldWrapper label="Duración (días)">
@@ -162,8 +121,7 @@ export function TourForm({
                     type="number"
                     min={0}
                     className={inputClassName}
-                    value={values.durationDays}
-                    onChange={(e) => updateGeneral('durationDays', e.target.value)}
+                    {...register('durationDays')}
                   />
                 </FieldWrapper>
                 <FieldWrapper label="Participantes mínimos">
@@ -171,8 +129,7 @@ export function TourForm({
                     type="number"
                     min={0}
                     className={inputClassName}
-                    value={values.minParticipants}
-                    onChange={(e) => updateGeneral('minParticipants', e.target.value)}
+                    {...register('minParticipants')}
                   />
                 </FieldWrapper>
                 <FieldWrapper label="Participantes máximos">
@@ -180,8 +137,7 @@ export function TourForm({
                     type="number"
                     min={0}
                     className={inputClassName}
-                    value={values.maxParticipants}
-                    onChange={(e) => updateGeneral('maxParticipants', e.target.value)}
+                    {...register('maxParticipants')}
                   />
                 </FieldWrapper>
                 <FieldWrapper label="Disponibilidad actual">
@@ -189,51 +145,27 @@ export function TourForm({
                     type="number"
                     min={0}
                     className={inputClassName}
-                    value={values.currentAvailability}
-                    onChange={(e) => updateGeneral('currentAvailability', e.target.value)}
+                    {...register('currentAvailability')}
                   />
                 </FieldWrapper>
                 <FieldWrapper label="Edad mínima">
-                  <input
-                    type="number"
-                    min={0}
-                    className={inputClassName}
-                    value={values.minAge}
-                    onChange={(e) => updateGeneral('minAge', e.target.value)}
-                  />
+                  <input type="number" min={0} className={inputClassName} {...register('minAge')} />
                 </FieldWrapper>
                 <FieldWrapper label="Imagen destacada (URL)">
-                  <input
-                    className={inputClassName}
-                    value={values.featuredImageUrl}
-                    onChange={(e) => updateGeneral('featuredImageUrl', e.target.value)}
-                  />
+                  <input className={inputClassName} {...register('featuredImageUrl')} />
                 </FieldWrapper>
                 <FieldWrapper label="Mapa de ruta (URL)">
-                  <input
-                    className={inputClassName}
-                    value={values.routeMapUrl}
-                    onChange={(e) => updateGeneral('routeMapUrl', e.target.value)}
-                  />
+                  <input className={inputClassName} {...register('routeMapUrl')} />
                 </FieldWrapper>
 
                 <div className="md:col-span-2">
                   <FieldWrapper label="Subtítulo">
-                    <input
-                      className={inputClassName}
-                      value={values.subtitle}
-                      onChange={(e) => updateGeneral('subtitle', e.target.value)}
-                    />
+                    <input className={inputClassName} {...register('subtitle')} />
                   </FieldWrapper>
                 </div>
                 <div className="md:col-span-2">
                   <FieldWrapper label="Descripción">
-                    <textarea
-                      className={inputClassName}
-                      rows={4}
-                      value={values.description}
-                      onChange={(e) => updateGeneral('description', e.target.value)}
-                    />
+                    <textarea className={inputClassName} rows={4} {...register('description')} />
                   </FieldWrapper>
                 </div>
                 <div className="md:col-span-2">
@@ -241,8 +173,7 @@ export function TourForm({
                     <textarea
                       className={inputClassName}
                       rows={3}
-                      value={values.galleryImageUrls}
-                      onChange={(e) => updateGeneral('galleryImageUrls', e.target.value)}
+                      {...register('galleryImageUrls')}
                     />
                   </FieldWrapper>
                 </div>
@@ -251,34 +182,46 @@ export function TourForm({
                   <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Días disponibles
                   </span>
-                  <div className="mt-1 flex flex-wrap gap-3">
-                    {Object.entries(weekDayNames).map(([day, name]) => (
-                      <label key={day} className="flex items-center gap-1.5 text-sm text-gray-700">
-                        <input
-                          type="checkbox"
-                          checked={values.availableDays.includes(Number(day))}
-                          onChange={() => toggleAvailableDay(Number(day))}
-                        />
-                        {name}
-                      </label>
-                    ))}
-                  </div>
+                  <Controller
+                    control={control}
+                    name="availableDays"
+                    render={({ field }) => (
+                      <div className="mt-1 flex flex-wrap gap-3">
+                        {Object.entries(weekDayNames).map(([day, name]) => {
+                          const dayNumber = Number(day)
+                          const checked = field.value.includes(dayNumber)
+
+                          return (
+                            <label
+                              key={day}
+                              className="flex items-center gap-1.5 text-sm text-gray-700"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => {
+                                  field.onChange(
+                                    checked
+                                      ? field.value.filter((item) => item !== dayNumber)
+                                      : [...field.value, dayNumber].sort((a, b) => a - b),
+                                  )
+                                }}
+                              />
+                              {name}
+                            </label>
+                          )
+                        })}
+                      </div>
+                    )}
+                  />
                 </div>
 
                 <label className="flex items-center gap-1.5 text-sm text-gray-700">
-                  <input
-                    type="checkbox"
-                    checked={values.isActive}
-                    onChange={(e) => updateGeneral('isActive', e.target.checked)}
-                  />
+                  <input type="checkbox" {...register('isActive')} />
                   Activo
                 </label>
                 <label className="flex items-center gap-1.5 text-sm text-gray-700">
-                  <input
-                    type="checkbox"
-                    checked={values.isFeatured}
-                    onChange={(e) => updateGeneral('isFeatured', e.target.checked)}
-                  />
+                  <input type="checkbox" {...register('isFeatured')} />
                   Destacado
                 </label>
               </div>
@@ -290,17 +233,12 @@ export function TourForm({
             content: (
               <div className="grid gap-4 md:grid-cols-2">
                 <FieldWrapper label="Título">
-                  <input
-                    className={inputClassName}
-                    value={values.translations[code]?.title ?? ''}
-                    onChange={(e) => updateTranslation(code, 'title', e.target.value)}
-                  />
+                  <input className={inputClassName} {...register(`translations.${code}.title`)} />
                 </FieldWrapper>
                 <FieldWrapper label="Subtítulo">
                   <input
                     className={inputClassName}
-                    value={values.translations[code]?.subtitle ?? ''}
-                    onChange={(e) => updateTranslation(code, 'subtitle', e.target.value)}
+                    {...register(`translations.${code}.subtitle`)}
                   />
                 </FieldWrapper>
                 <div className="md:col-span-2">
@@ -308,8 +246,7 @@ export function TourForm({
                     <textarea
                       className={inputClassName}
                       rows={4}
-                      value={values.translations[code]?.description ?? ''}
-                      onChange={(e) => updateTranslation(code, 'description', e.target.value)}
+                      {...register(`translations.${code}.description`)}
                     />
                   </FieldWrapper>
                 </div>
@@ -318,8 +255,7 @@ export function TourForm({
                     <textarea
                       className={inputClassName}
                       rows={4}
-                      value={values.translations[code]?.detailedItinerary ?? ''}
-                      onChange={(e) => updateTranslation(code, 'detailedItinerary', e.target.value)}
+                      {...register(`translations.${code}.detailedItinerary`)}
                     />
                   </FieldWrapper>
                 </div>

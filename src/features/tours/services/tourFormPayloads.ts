@@ -80,14 +80,22 @@ export function tourToFormValues(tour: Tour): TourFormValues {
   }
 }
 
-export function formValuesToUpdatePayload(values: TourFormValues): UpdateTourPayload {
-  const destinationId = Number(values.destinationId)
+function parseDestinationId(value: string): number | undefined {
+  const id = Number(value)
+  return value && Number.isInteger(id) && id > 0 ? id : undefined
+}
+
+/**
+ * Converts form values into the full API payload shape. Shared by both
+ * `toCreatePayload` (used as-is) and `toUpdatePayload` (used to diff against
+ * the original tour so only changed fields are sent).
+ */
+function buildFullPayload(values: TourFormValues): UpdateTourPayload {
+  const destinationId = parseDestinationId(values.destinationId)
 
   return {
     slug: values.slug,
-    ...(values.destinationId && Number.isInteger(destinationId) && destinationId > 0
-      ? { destinationId }
-      : {}),
+    ...(destinationId !== undefined ? { destinationId } : {}),
     subtitle: values.subtitle,
     description: values.description,
     durationHours: Number(values.durationHours) || 0,
@@ -110,4 +118,82 @@ export function formValuesToUpdatePayload(values: TourFormValues): UpdateTourPay
       .filter((url) => url.length > 0),
     translations: languageTabDefinitions.map(({ code }) => values.translations[code]),
   }
+}
+
+/**
+ * Converts form values into the payload sent when creating a tour (POST).
+ * There is no "original" tour to diff against, so the full payload is sent.
+ */
+export function toCreatePayload(values: TourFormValues): UpdateTourPayload {
+  return buildFullPayload(values)
+}
+
+function arraysEqual<T>(a: T[], b: T[]): boolean {
+  return a.length === b.length && a.every((item, index) => item === b[index])
+}
+
+function translationChanged(a: TourTranslationInput, b: TourTranslationInput): boolean {
+  return (
+    a.title !== b.title ||
+    a.subtitle !== b.subtitle ||
+    a.description !== b.description ||
+    a.detailedItinerary !== b.detailedItinerary
+  )
+}
+
+/**
+ * Converts form values into the payload sent when updating a tour (PUT),
+ * diffing against the `original` tour so only fields that actually changed
+ * are included. Translations are included in full (with their `id`) when any
+ * of their fields changed; unchanged translations are omitted entirely.
+ */
+export function toUpdatePayload(
+  values: TourFormValues,
+  original: Tour,
+): Partial<UpdateTourPayload> {
+  const current = buildFullPayload(values)
+  const previous = buildFullPayload(tourToFormValues(original))
+  const patch: Partial<UpdateTourPayload> = {}
+
+  if (current.slug !== previous.slug) patch.slug = current.slug
+  if (current.destinationId !== previous.destinationId) patch.destinationId = current.destinationId
+  if (current.subtitle !== previous.subtitle) patch.subtitle = current.subtitle
+  if (current.description !== previous.description) patch.description = current.description
+  if (current.durationHours !== previous.durationHours) patch.durationHours = current.durationHours
+  if (current.durationDays !== previous.durationDays) patch.durationDays = current.durationDays
+  if (current.startTime !== previous.startTime) patch.startTime = current.startTime
+  if (current.endTime !== previous.endTime) patch.endTime = current.endTime
+  if (!arraysEqual(current.availableDays, previous.availableDays)) {
+    patch.availableDays = current.availableDays
+  }
+  if (current.minParticipants !== previous.minParticipants) {
+    patch.minParticipants = current.minParticipants
+  }
+  if (current.maxParticipants !== previous.maxParticipants) {
+    patch.maxParticipants = current.maxParticipants
+  }
+  if (current.currentAvailability !== previous.currentAvailability) {
+    patch.currentAvailability = current.currentAvailability
+  }
+  if (current.minAge !== previous.minAge) patch.minAge = current.minAge
+  if (current.isActive !== previous.isActive) patch.isActive = current.isActive
+  if (current.isFeatured !== previous.isFeatured) patch.isFeatured = current.isFeatured
+  if (current.tourCode !== previous.tourCode) patch.tourCode = current.tourCode
+  if (current.routeMapUrl !== previous.routeMapUrl) patch.routeMapUrl = current.routeMapUrl
+  if (current.featuredImageUrl !== previous.featuredImageUrl) {
+    patch.featuredImageUrl = current.featuredImageUrl
+  }
+  if (!arraysEqual(current.galleryImageUrls, previous.galleryImageUrls)) {
+    patch.galleryImageUrls = current.galleryImageUrls
+  }
+
+  const changedTranslations = current.translations.filter((translation, index) => {
+    const previousTranslation = previous.translations[index]
+    return !previousTranslation || translationChanged(translation, previousTranslation)
+  })
+  if (changedTranslations.length > 0) {
+    patch.translations = changedTranslations
+  }
+
+  return patch
 }

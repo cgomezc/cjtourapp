@@ -7,7 +7,7 @@ interface UseTourDetailResult {
   isLoading: boolean
   error: string | null
   refetch: () => void
-  saveTour: (payload: UpdateTourPayload) => Promise<Tour>
+  saveTour: (payload: Partial<UpdateTourPayload>) => Promise<Tour>
   isSaving: boolean
   saveError: string | null
 }
@@ -40,7 +40,7 @@ export function useTourDetail(tourId: number): UseTourDetailResult {
   }, [fetchTour])
 
   const saveTour = useCallback(
-    (payload: UpdateTourPayload) => {
+    (payload: Partial<UpdateTourPayload>) => {
       setIsSaving(true)
       setSaveError(null)
 
