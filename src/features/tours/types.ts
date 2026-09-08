@@ -40,7 +40,7 @@ export interface Tour {
   tourCode?: string
   routeMapUrl?: string | null
   featuredImageUrl?: string | null
-  galleryImageUrls?: string[]
+  galleryImageUrls?: string
   translations?: TourTranslation[]
 }
 
@@ -94,6 +94,6 @@ export interface UpdateTourPayload {
   tourCode: string
   routeMapUrl: string
   featuredImageUrl: string
-  galleryImageUrls: string[]
+  galleryImageUrls: string
   translations: TourTranslationInput[]
 }

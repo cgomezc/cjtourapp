@@ -75,7 +75,9 @@ export function tourToFormValues(tour: Tour): TourFormValues {
     tourCode: tour.tourCode ?? '',
     routeMapUrl: tour.routeMapUrl ?? '',
     featuredImageUrl: tour.featuredImageUrl ?? '',
-    galleryImageUrls: (tour.galleryImageUrls ?? []).join('\n'),
+    galleryImageUrls: Array.isArray(tour?.galleryImageUrls)
+    ? tour.galleryImageUrls.join('\n')
+    : (tour?.galleryImageUrls ?? ''),
     translations,
   }
 }
@@ -112,8 +114,10 @@ function buildFullPayload(values: TourFormValues): UpdateTourPayload {
     tourCode: values.tourCode,
     routeMapUrl: values.routeMapUrl,
     featuredImageUrl: values.featuredImageUrl,
-    galleryImageUrls: values.galleryImageUrls
-      .split('\n')
+    galleryImageUrls: (Array.isArray(values.galleryImageUrls)
+      ? values.galleryImageUrls
+      : values.galleryImageUrls.split(/[\n,]+/)
+    )
       .map((url) => url.trim())
       .filter((url) => url.length > 0),
     translations: languageTabDefinitions.map(({ code }) => values.translations[code]),
